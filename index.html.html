@@ -86,10 +86,15 @@
       z-index: 10;
       text-align: center;
     }
-    .modal h2 {
-      font-size: 24px;
+    /* 最终评分样式，足够大且震撼 */
+    .modal #finalRating {
+      font-size: 40px;
+      font-weight: bold;
       color: #e91e63;
-      margin: 10px 0;
+      text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.4);
+      transform: scale(1);
+      transition: transform 0.5s ease;
+      margin-bottom: 10px;
     }
     .progress-container {
       width: 100%;
@@ -169,9 +174,9 @@
   </div>
 
   <script>
-    // 上传图片事件监听
+    // 监听上传图片事件
     document.getElementById("upload").addEventListener("change", function(event) {
-      resetTest(); // 每次上传前重置之前的测试状态
+      resetTest(); // 每次上传前重置测试状态
       let file = event.target.files[0];
       if (file) {
         let reader = new FileReader();
@@ -184,15 +189,16 @@
       }
     });
 
-    // 重置测试（重置进度条和评分文本）
+    // 重置测试状态（重置进度条和评分文本）
     function resetTest() {
       document.getElementById("finalRating").innerText = "Your Rating: ?";
+      document.getElementById("finalRating").style.transform = "scale(1)";
       document.getElementById("craft").style.width = "0%";
       document.getElementById("color").style.width = "0%";
       document.getElementById("art").style.width = "0%";
     }
 
-    // 显示弹窗，并启动评分动画
+    // 显示评分弹窗，并启动评分动画
     function showModal() {
       document.getElementById("overlay").style.display = "block";
       document.getElementById("ratingModal").style.display = "block";
@@ -211,7 +217,12 @@
       animateProgress("craft", craftScore, () => {
         animateProgress("color", colorScore, () => {
           animateProgress("art", artScore, () => {
-            calculateFinalRating(craftScore, colorScore, artScore);
+            // 在所有进度条完成后，延迟 500ms 显示最终评分
+            setTimeout(() => {
+              calculateFinalRating(craftScore, colorScore, artScore);
+              // 最终评分动画：放大效果
+              document.getElementById("finalRating").style.transform = "scale(1.1)";
+            }, 500);
           });
         });
       });
@@ -225,7 +236,7 @@
       }, 1500);
     }
 
-    // 根据三个分数计算最终评分
+    // 根据三个分数计算最终评分，并更新显示
     function calculateFinalRating(craft, color, art) {
       let avg = (craft + color + art) / 3;
       let finalRating = avg >= 92 ? "A+" : avg >= 85 ? "A" : "B+";
@@ -237,7 +248,7 @@
       return Math.floor(Math.random() * 20) + 80;
     }
 
-    // 关闭弹窗
+    // 关闭评分弹窗
     function closeModal() {
       document.getElementById("ratingModal").style.display = "none";
       document.getElementById("overlay").style.display = "none";
