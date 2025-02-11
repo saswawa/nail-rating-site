@@ -8,15 +8,16 @@
         body { 
             font-family: Arial, sans-serif; 
             text-align: center; 
-            margin: 50px; 
+            margin: 0; 
             background-color: #fce4ec; 
-            transition: filter 0.3s ease-in-out;
+            padding: 20px; 
         }
-        h1 { color: #e91e63; }
+        h1 { color: #e91e63; margin-top: 20px; }
         .upload-box { 
             border: 2px dashed #e91e63; 
             padding: 20px; 
-            width: 300px; 
+            width: 80%; 
+            max-width: 300px; 
             margin: auto; 
             background: white; 
             border-radius: 10px; 
@@ -26,17 +27,15 @@
         .upload-box:hover {
             transform: scale(1.05);
         }
-        #result { display: none; }
+        #result { display: none; margin-top: 20px; }
         img { max-width: 100%; margin-top: 10px; border-radius: 10px; }
         
-        /* Background blur overlay */
+        /* Overlay */
         .overlay { 
             display: none; 
             position: fixed; 
             top: 0; left: 0; width: 100%; height: 100%; 
             background: rgba(0,0,0,0.5);
-            transition: opacity 0.3s ease-in-out;
-            backdrop-filter: blur(5px);
         }
         
         /* Modal */
@@ -50,12 +49,23 @@
             padding: 20px; 
             border-radius: 10px; 
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            opacity: 0;
-            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
-            z-index: 10; /* Ensures the modal stays above the blurred background */
+            width: 80%;
+            max-width: 350px;
         }
-        
-        /* Button */
+        .modal h2 { margin: 10px 0; }
+        .progress-container {
+            width: 100%;
+            background-color: #ddd;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .progress-bar {
+            height: 10px;
+            border-radius: 5px;
+            background-color: #e91e63;
+            width: 0%;
+            transition: width 1.5s ease-in-out;
+        }
         .btn { 
             background: #e91e63; 
             color: white; 
@@ -63,76 +73,128 @@
             padding: 10px 20px; 
             cursor: pointer; 
             border-radius: 5px;
+            margin-top: 10px;
             transition: background 0.2s ease-in-out, transform 0.2s ease-in-out;
         }
         .btn:hover {
             background: #d81b60;
             transform: scale(1.05);
         }
+
+        /* Loading Animation */
+        .loading {
+            display: none;
+            font-size: 18px;
+            color: #e91e63;
+            margin-top: 20px;
+        }
+
+        /* Mobile optimization */
+        @media (max-width: 600px) {
+            .modal { width: 90%; max-width: 320px; }
+            .upload-box { width: 90%; }
+        }
     </style>
 </head>
 <body>
     <h1>Nail Rating System</h1>
-    <p>Upload your nail photo and receive a rating!</p>
+    <p>Upload your nail photo and receive an instant rating!</p>
 
     <div class="upload-box" onclick="document.getElementById('upload').click()">
         <input type="file" id="upload" accept="image/*" style="display: none;">
-        <p>Click here to upload</p>
+        <p>📸 Click to upload your nail photo</p>
     </div>
 
     <div id="result">
         <img id="preview" src="" alt="Uploaded Nail Photo">
     </div>
 
+    <div class="loading" id="loading">🔍 AI is analyzing your nails...</div>
+
     <div class="overlay" id="overlay"></div>
     <div class="modal" id="ratingModal">
-        <h2>Your Rating: A+ 🌟</h2>
+        <h2 id="finalRating">Your Rating: ?</h2>
         <p>Perfect nails! Keep it up! 💅</p>
+        <div>
+            <p>Craftsmanship (工艺)</p>
+            <div class="progress-container"><div class="progress-bar" id="craft"></div></div>
+        </div>
+        <div>
+            <p>Color (色彩)</p>
+            <div class="progress-container"><div class="progress-bar" id="color"></div></div>
+        </div>
+        <div>
+            <p>Artistic Appeal (艺术)</p>
+            <div class="progress-container"><div class="progress-bar" id="art"></div></div>
+        </div>
         <button class="btn" onclick="closeModal()">OK</button>
     </div>
 
     <script>
-        let visits = localStorage.getItem('visits') || 0;
-        let uploads = localStorage.getItem('uploads') || 0;
-        visits++;
-        localStorage.setItem('visits', visits);
-        console.log("Total Visits:", visits);
-        
         document.getElementById("upload").addEventListener("change", function(event) {
             let file = event.target.files[0];
             if (file) {
-                uploads++;
-                localStorage.setItem('uploads', uploads);
-                console.log("Total Uploads:", uploads);
-
                 let reader = new FileReader();
                 reader.onload = function(e) {
                     document.getElementById("preview").src = e.target.result;
                     document.getElementById("result").style.display = "block";
-                    showModal();
+                    showLoading();
                 };
                 reader.readAsDataURL(file);
             }
         });
 
+        function showLoading() {
+            document.getElementById("loading").style.display = "block";
+            setTimeout(() => {
+                document.getElementById("loading").style.display = "none";
+                showModal();
+            }, 2000); // 2秒后开始评分
+        }
+
         function showModal() {
             document.getElementById("overlay").style.display = "block";
-            document.getElementById("overlay").style.opacity = "1";
             document.getElementById("ratingModal").style.display = "block";
             setTimeout(() => {
-                document.getElementById("ratingModal").style.opacity = "1";
                 document.getElementById("ratingModal").style.transform = "translate(-50%, -50%) scale(1)";
-            }, 50);
+                startProgressBars();
+            }, 100);
+        }
+
+        function startProgressBars() {
+            let craftScore = getRandomScore();
+            let colorScore = getRandomScore();
+            let artScore = getRandomScore();
+
+            animateProgress("craft", craftScore, () => {
+                animateProgress("color", colorScore, () => {
+                    animateProgress("art", artScore, () => {
+                        calculateFinalRating(craftScore, colorScore, artScore);
+                    });
+                });
+            });
+        }
+
+        function animateProgress(id, score, callback) {
+            setTimeout(() => {
+                document.getElementById(id).style.width = score + "%";
+                if (callback) callback();
+            }, 1500);
+        }
+
+        function calculateFinalRating(craft, color, art) {
+            let avg = (craft + color + art) / 3;
+            let finalRating = avg >= 92 ? "A+" : avg >= 85 ? "A" : "B+";
+            document.getElementById("finalRating").innerText = `Your Rating: ${finalRating}`;
+        }
+
+        function getRandomScore() {
+            return Math.floor(Math.random() * 20) + 80; // 80-99
         }
 
         function closeModal() {
-            document.getElementById("ratingModal").style.opacity = "0";
-            document.getElementById("ratingModal").style.transform = "translate(-50%, -50%) scale(0.8)";
-            document.getElementById("overlay").style.opacity = "0";
-            setTimeout(() => {
-                document.getElementById("ratingModal").style.display = "none";
-                document.getElementById("overlay").style.display = "none";
-            }, 300);
+            document.getElementById("ratingModal").style.display = "none";
+            document.getElementById("overlay").style.display = "none";
         }
     </script>
 </body>
