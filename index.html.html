@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Nail Rating System</title>
   <!-- 引入 Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Montserrat:wght@400;700&display=swap" rel="stylesheet" />
   <style>
     /* 全屏平滑渐变背景，内容居中 */
     body {
@@ -128,10 +128,37 @@
     }
     /* 手机端优化 */
     @media (max-width: 600px) {
-      .modal { max-width: 320px; }
-      .upload-box { max-width: 90%; }
+      .modal {
+        max-width: 320px;
+      }
+      .upload-box {
+        max-width: 90%;
+      }
     }
   </style>
+
+  <!-- TikTok Pixel Code Start -->
+  <script>
+  !function (w, d, t) {
+    w.TiktokAnalyticsObject = t; var ttq = w[t] = w[t] || [];
+    ttq.methods = ["page", "track", "identify", "instances", "debug", "on", "off", "once", "ready", "alias", "group", "enableCookie", "disableCookie", "holdConsent", "revokeConsent", "grantConsent"],
+      ttq.setAndDefer = function (t, e) { t[e] = function () { t.push([e].concat(Array.prototype.slice.call(arguments, 0))) } };
+    for (var i = 0; i < ttq.methods.length; i++) ttq.setAndDefer(ttq, ttq.methods[i]);
+    ttq.instance = function (t) { for (var e = ttq._i[t] || [], n = 0; n < ttq.methods.length; n++) ttq.setAndDefer(e, ttq.methods[n]); return e },
+      ttq.load = function (e, n) {
+        var r = "https://analytics.tiktok.com/i18n/pixel/events.js", o = n && n.partner;
+        ttq._i = ttq._i || {}, ttq._i[e] = [], ttq._i[e]._u = r, ttq._t = ttq._t || {}, ttq._t[e] = +new Date, ttq._o = ttq._o || {}, ttq._o[e] = n || {};
+        n = document.createElement("script");
+        n.type = "text/javascript", n.async = !0, n.src = r + "?sdkid=" + e + "&lib=" + t;
+        e = document.getElementsByTagName("script")[0];
+        e.parentNode.insertBefore(n, e)
+      };
+
+    ttq.load('D28VNPBC77UBLU2UVDS0');  // 这里换成你的 TikTok Pixel ID
+    ttq.page();
+  }(window, document, 'ttq');
+  </script>
+  <!-- TikTok Pixel Code End -->
 </head>
 <body>
   <div class="container">
@@ -139,12 +166,12 @@
     <p>Upload your nail photo and receive an instant rating!</p>
 
     <div class="upload-box" onclick="document.getElementById('upload').click()">
-      <input type="file" id="upload" accept="image/*" style="display: none;">
+      <input type="file" id="upload" accept="image/*" style="display: none;" />
       <p>📸 Click to upload your nail photo</p>
     </div>
 
     <div id="result">
-      <img id="preview" src="" alt="Uploaded Nail Photo">
+      <img id="preview" src="" alt="Uploaded Nail Photo" />
     </div>
   </div>
 
@@ -174,11 +201,28 @@
   </div>
 
   <script>
+    // 防止同一用户重复多次触发转化（用 localStorage 简单去重）
+    const conversionKey = 'tiktokConversionDone';
+
+    // 上传触发转化事件函数
+    function triggerTikTokConversion() {
+      if (!localStorage.getItem(conversionKey)) {
+        ttq.track('CompleteRegistration'); // 这里用合适的事件名，比如“CompleteRegistration”或你在后台定义的事件
+        localStorage.setItem(conversionKey, 'true');
+        console.log('TikTok Pixel conversion tracked.');
+      } else {
+        console.log('Conversion already tracked for this user.');
+      }
+    }
+
     // 监听上传图片事件
     document.getElementById("upload").addEventListener("change", function(event) {
       resetTest(); // 每次上传前重置测试状态
       let file = event.target.files[0];
       if (file) {
+        // 触发 TikTok 转化埋点
+        triggerTikTokConversion();
+
         let reader = new FileReader();
         reader.onload = function(e) {
           document.getElementById("preview").src = e.target.result;
